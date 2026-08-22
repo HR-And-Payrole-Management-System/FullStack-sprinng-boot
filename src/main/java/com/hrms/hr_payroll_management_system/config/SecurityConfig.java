@@ -6,7 +6,12 @@ import com.hrms.hr_payroll_management_system.security.CustomUserDetailsService;
 import com.hrms.hr_payroll_management_system.security.JwtAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,7 +41,9 @@ public class SecurityConfig{
             HttpSecurity http
     ) throws Exception {
 
-        http
+                http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -51,6 +58,8 @@ public class SecurityConfig{
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers(
                         "/api/v1/auth/register",
                         "/api/v1/auth/login",
@@ -117,4 +126,20 @@ public class SecurityConfig{
 
         return configuration.getAuthenticationManager();
     }
+    @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+        );
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+        }
 }

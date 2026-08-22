@@ -1,10 +1,12 @@
 package com.hrms.hr_payroll_management_system.repository;
 
 import com.hrms.hr_payroll_management_system.entity.Employee;
+import com.hrms.hr_payroll_management_system.enums.EmployeeStatus;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-
+import com.hrms.hr_payroll_management_system.enums.EmployeeStatus;
+import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository
@@ -29,4 +31,7 @@ public interface EmployeeRepository
         boolean existsByManagerId(Long managerId);
 
         long countByPositionId(Long positionId);
+         long countByStatus(EmployeeStatus status);
+ 
+    List<Employee> findByDepartmentId(Long departmentId);
 }

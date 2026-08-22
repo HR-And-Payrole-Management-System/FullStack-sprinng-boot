@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import com.hrms.hr_payroll_management_system.dto.request.auth.VerifyEmailRequest;
 import com.hrms.hr_payroll_management_system.dto.request.auth.ResendVerificationRequest;
 import com.hrms.hr_payroll_management_system.dto.response.auth.CurrentUserResponse;
-import org.springframework.security.core.Authentication;
+
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -204,4 +204,5 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
         }
+        
 }

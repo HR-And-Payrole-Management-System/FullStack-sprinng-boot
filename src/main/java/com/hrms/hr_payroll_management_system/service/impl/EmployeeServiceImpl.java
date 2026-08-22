@@ -38,6 +38,7 @@ import com.hrms.hr_payroll_management_system.repository.specification.EmployeeSp
 
 import com.hrms.hr_payroll_management_system.service.EmployeeService;
 import com.hrms.hr_payroll_management_system.service.OrganizationIntegrityService;
+import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,7 +46,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
+import com.hrms.hr_payroll_management_system.enums.AuditAction;
+import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
 import org.springframework.data.jpa.domain.Specification;
 
 import org.springframework.stereotype.Service;
@@ -64,7 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final CompanyRepository companyRepository;
     private final BranchRepository branchRepository;
     private final OrganizationIntegrityService organizationIntegrityService;
-
+private final AuditLogService auditLogService;
     // =========================================================
     // CREATE
     // =========================================================
@@ -91,10 +93,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee =
                 employeeMapper.toEntity(request);
 
-        Employee savedEmployee =
-                employeeRepository.save(employee);
+       Employee savedEmployee =
+        employeeRepository.save(employee);
 
-        return employeeMapper.toResponse(savedEmployee);
+        auditLogService.log(
+                AuditAction.CREATE,
+                "EMPLOYEE",
+                savedEmployee.getId(),
+                "Employee created."
+        );
+
+        return employeeMapper.toResponse(
+                savedEmployee
+        );
     }
 
     // =========================================================
@@ -227,7 +238,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
 
         Employee updatedEmployee =
-                employeeRepository.save(employee);
+        employeeRepository.save(employee);
+
+        auditLogService.log(
+                AuditAction.UPDATE,
+                "EMPLOYEE",
+                updatedEmployee.getId(),
+                "Employee information updated."
+        );
 
         return employeeMapper.toResponse(
                 updatedEmployee
@@ -239,15 +257,26 @@ public class EmployeeServiceImpl implements EmployeeService {
     // =========================================================
 
     @Override
-    public void delete(Long id) {
+        public void delete(Long id) {
 
-        Employee employee = getEmployee(id);
+        Employee employee =
+                getEmployee(id);
 
         organizationIntegrityService
                 .validateEmployeeDeletion(id);
 
+        Long employeeId =
+                employee.getId();
+
         employeeRepository.delete(employee);
-    }
+
+        auditLogService.log(
+                AuditAction.DELETE,
+                "EMPLOYEE",
+                employeeId,
+                "Employee deleted."
+        );
+        }
 
     // =========================================================
     // EMERGENCY CONTACT - SAVE / UPDATE

@@ -5,7 +5,7 @@ import com.hrms.hr_payroll_management_system.entity.EmployeeWorkSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import java.util.Optional;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,4 +34,16 @@ public interface EmployeeWorkScheduleRepository
             @Param("newStart") LocalDate newStart,
             @Param("newEnd") LocalDate newEnd
     );
+        @Query("""
+        select e
+        from EmployeeWorkSchedule e
+        where e.employee.id = :employeeId
+                and e.effectiveDate <= :date
+                and (e.endDate is null or e.endDate >= :date)
+        order by e.effectiveDate desc
+        """)
+        Optional<EmployeeWorkSchedule> findActiveSchedule(
+                @Param("employeeId") Long employeeId,
+                @Param("date") LocalDate date
+        );
 }
