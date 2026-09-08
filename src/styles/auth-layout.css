@@ -1,0 +1,458 @@
+.auth-shell {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+  .auth-brand-panel {
+    display: none;
+  }
+}
+
+/* ---------- Left: navy branding panel ---------- */
+.auth-brand-panel {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 15% 10%, #16213E 0%, #0B1220 65%, #0B1220 100%);
+  display: flex;
+  align-items: center;
+  padding: 4rem;
+}
+
+.auth-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 2;
+  color: #E7ECFF;
+  max-width: 460px;
+}
+
+.auth-brand-mark {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  color: #5EEAD4;
+  margin-bottom: 2.5rem;
+}
+
+.auth-brand-headline {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 2.35rem;
+  line-height: 1.28;
+  color: #F8FAFC;
+  margin-bottom: 1.25rem;
+}
+
+.auth-brand-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #94A3B8;
+  margin-bottom: 3rem;
+}
+
+.auth-brand-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #64748B;
+}
+
+.auth-brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5EEAD4;
+  box-shadow: 0 0 8px #5EEAD4;
+}
+
+/* ---------- Right: form panel ---------- */
+.auth-form-panel {
+  background: #F8FAFC;
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.auth-form-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto 0;
+}
+
+.auth-eyebrow {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: #4C6FFF;
+  margin-bottom: 0.75rem;
+}
+
+.auth-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #0B1220;
+  margin-bottom: 0.4rem;
+}
+
+.auth-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  color: #64748B;
+  margin-bottom: 1.75rem;
+}
+
+/* form controls — override bootstrap defaults inside auth card */
+.auth-form-card .form-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.auth-form-card .form-control {
+  border-color: #E2E8F0;
+  padding: 0.65rem 0.85rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-form-card .form-control:focus {
+  border-color: #4C6FFF;
+  box-shadow: 0 0 0 3px rgba(76, 111, 255, 0.15);
+}
+
+.auth-form-card .btn-primary {
+  background: #4C6FFF;
+  border-color: #4C6FFF;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  padding: 0.65rem;
+}
+
+.auth-form-card .btn-primary:hover {
+  background: #3B5BDB;
+  border-color: #3B5BDB;
+}
+
+/* OTP digit input gets the mono treatment */
+.auth-otp-input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+}
+/* --- append to the existing auth-layout.css --- */
+
+.auth-input-icon-group {
+  position: relative;
+}
+
+.auth-input-icon-group svg {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.auth-input-icon-group .form-control {
+  padding-left: 2.5rem;
+}
+
+.auth-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.auth-form-row .form-check-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #64748B;
+}
+
+.auth-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4C6FFF;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  color: #3B5BDB;
+  text-decoration: underline;
+}
+
+.auth-form-footer {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  color: #64748B;
+}
+
+.auth-trust-row {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #94A3B8;
+}
+
+.auth-trust-row span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.auth-form-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.auth-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(76, 111, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4C6FFF;
+  margin-bottom: 1.25rem;
+}
+.auth-form-panel {
+  background: #F8FAFC;
+  display: flex;
+  justify-content: center;    /* removed align-items: center */
+  padding: 2.5rem 2rem;
+  height: 100%;
+  overflow-y: auto;           /* NEW — lets this column scroll independently */
+}
+
+.auth-form-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto 0;             /* NEW — centers when short, scrolls naturally when tall */
+}
+.auth-oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1.5px solid #E2E8F0;
+  background: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.auth-oauth-btn:hover {
+  border-color: #4C6FFF;
+  background: rgba(76, 111, 255, 0.04);
+  color: #0B1220;
+  transform: translateY(-1px);
+}
+
+.auth-oauth-btn:active {
+  transform: translateY(0);
+}
+
+.auth-oauth-btn.github {
+  color: #24292e;
+}
+
+.auth-oauth-btn.github:hover {
+  border-color: #24292e;
+  background: rgba(36, 41, 46, 0.04);
+}
+
+.auth-divider-row {
+  display: flex;
+  align-items: center;
+  margin: 1.25rem 0;
+  gap: 0.75rem;
+}
+
+.auth-divider-row hr {
+  flex-grow: 1;
+  margin: 0;
+  border-top: 1px solid #E2E8F0;
+}
+
+.auth-divider-row span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #94A3B8;
+}
+@keyframes authFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-brand-mark {
+  animation: authFadeUp 0.6s ease both;
+  animation-delay: 0.1s;
+}
+
+.auth-brand-headline {
+  overflow: hidden;
+}
+
+.auth-brand-headline br + span,
+.auth-brand-headline .auth-headline-line {
+  display: inline-block;
+  opacity: 0;
+  animation: authFadeUp 0.7s ease both;
+}
+
+.auth-brand-headline .auth-headline-line:nth-child(1) { animation-delay: 0.25s; }
+.auth-brand-headline .auth-headline-line:nth-child(2) { animation-delay: 0.4s; }
+.auth-brand-headline .auth-headline-line:nth-child(3) { animation-delay: 0.55s; }
+
+.auth-brand-sub {
+  animation: authFadeUp 0.7s ease both;
+  animation-delay: 0.75s;
+}
+
+.auth-brand-footer {
+  animation: authFadeUp 0.7s ease both;
+  animation-delay: 0.1s;
+}
+.auth-typewriter {
+  min-height: 3.9em; /* reserves 3 lines of space so nothing jumps as text types/resets */
+}
+
+.auth-headline-line {
+  display: block;
+}
+
+.auth-typewriter-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-left: 3px;
+  background: #5EEAD4;
+  vertical-align: middle;
+  animation: authCursorBlink 0.8s step-end infinite;
+}
+
+@keyframes authCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+[data-theme='dark'] .auth-form-panel,
+[data-theme='dark'] .auth-right-panel {
+  background: var(--color-bg);
+}
+[data-theme='dark'] .auth-form-panel h1,
+[data-theme='dark'] .auth-form-panel h2,
+[data-theme='dark'] .auth-form-panel .auth-title {
+  color: var(--color-text);
+}
+[data-theme='dark'] .auth-form-panel p,
+[data-theme='dark'] .auth-form-panel .auth-subtitle {
+  color: var(--color-text-muted);
+}
+[data-theme='dark'] .auth-form-panel .form-control,
+[data-theme='dark'] .auth-input-icon-group input {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+[data-theme='dark'] .auth-form-panel a {
+  color: var(--color-primary);
+}
+/* ==================================================
+   DARK MODE — right-side form panel
+   (left branding panel is already navy by design,
+   so it needs no dark-mode override)
+   ================================================== */
+[data-theme='dark'] .auth-form-panel {
+  background: var(--color-bg);
+}
+
+[data-theme='dark'] .auth-title {
+  color: var(--color-text);
+}
+
+[data-theme='dark'] .auth-subtitle {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark'] .auth-form-card .form-label {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark'] .auth-form-card .form-control {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme='dark'] .auth-form-card .form-control::placeholder {
+  color: var(--color-text-subtle);
+}
+
+[data-theme='dark'] .auth-form-card .form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+[data-theme='dark'] .auth-input-icon-group svg {
+  color: var(--color-text-subtle);
+}
+
+[data-theme='dark'] .auth-form-row .form-check-label {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark'] .auth-form-footer {
+  border-top-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark'] .auth-trust-row {
+  color: var(--color-text-subtle);
+}
+
+[data-theme='dark'] .auth-success-icon {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
