@@ -9,7 +9,7 @@ import com.hrms.hr_payroll_management_system.service.DepartmentService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -183,6 +183,22 @@ public class DepartmentController {
                         .message(
                                 "Department organization assigned successfully."
                         )
+                        .data(department)
+                        .build()
+        );
+        }
+        @PostMapping(value = "/{id}/logo", consumes = "multipart/form-data")
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('DEPARTMENT_UPDATE')")
+        public ResponseEntity<ApiResponse<DepartmentResponse>> uploadLogo(
+                @PathVariable Long id,
+                @RequestParam("file") MultipartFile file
+        ) {
+        DepartmentResponse department = departmentService.uploadLogo(id, file);
+
+        return ResponseEntity.ok(
+                ApiResponse.<DepartmentResponse>builder()
+                        .success(true)
+                        .message("Department logo uploaded successfully.")
                         .data(department)
                         .build()
         );

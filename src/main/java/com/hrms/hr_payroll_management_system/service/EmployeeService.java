@@ -7,11 +7,13 @@ import com.hrms.hr_payroll_management_system.dto.request.employee.ChangeEmployee
 import com.hrms.hr_payroll_management_system.dto.request.employee.CreateEmployeeRequest;
 import com.hrms.hr_payroll_management_system.dto.request.employee.UpdateEmployeeRequest;
 import com.hrms.hr_payroll_management_system.dto.request.employee.UpsertEmergencyContactRequest;
-
+import org.springframework.web.multipart.MultipartFile;
 import com.hrms.hr_payroll_management_system.dto.response.employee.EmployeeResponse;
+import com.hrms.hr_payroll_management_system.dto.response.employee.TeamMemberResponse;
 import com.hrms.hr_payroll_management_system.enums.EmployeeStatus;
 import com.hrms.hr_payroll_management_system.enums.EmploymentType;
 import com.hrms.hr_payroll_management_system.dto.response.employee.EmergencyContactResponse;
+import java.util.List;
 
 public interface EmployeeService {
 
@@ -62,4 +64,10 @@ public interface EmployeeService {
     );
 
     void delete(Long id);
+
+    void unlinkUser(Long employeeId);
+
+    EmployeeResponse uploadPhoto(Long employeeId, MultipartFile file);
+
+    List<TeamMemberResponse> getMyTeam(String email);
 }

@@ -143,6 +143,7 @@ public class Employee extends BaseEntity {
             orphanRemoval = true,
             fetch = FetchType.LAZY
     )
+    
     private EmergencyContact emergencyContact;
 
     // =========================
@@ -166,4 +167,8 @@ public class Employee extends BaseEntity {
 
     @Column(name = "separation_date")
     private LocalDate separationDate;
+
+    @OneToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "user_id", unique = true)
+        private User user;
 }

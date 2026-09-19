@@ -3,6 +3,7 @@ package com.hrms.hr_payroll_management_system.service;
 import com.hrms.hr_payroll_management_system.dto.request.branch.CreateBranchRequest;
 import com.hrms.hr_payroll_management_system.dto.request.branch.UpdateBranchRequest;
 import com.hrms.hr_payroll_management_system.dto.response.branch.BranchResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,4 +27,6 @@ public interface BranchService {
     );
 
     void delete(Long id);
+
+    BranchResponse uploadLogo(Long id, MultipartFile file);
 }

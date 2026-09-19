@@ -7,8 +7,7 @@ import com.hrms.hr_payroll_management_system.exception.UnauthorizedException;
 import com.hrms.hr_payroll_management_system.repository.UserRepository;
 import com.hrms.hr_payroll_management_system.service.AccountSecurityService;
 
-import lombok.RequiredArgsConstructor;
-
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +15,26 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class AccountSecurityServiceImpl
         implements AccountSecurityService {
 
     private final UserRepository userRepository;
     private final SecurityProperties securityProperties;
+    private final AccountSecurityService self;
+
+    // Constructor សរសេរដោយដៃ (មិនប្រើ @RequiredArgsConstructor ទៀត) —
+    // ព្រោះ @Lazy ត្រូវការភ្ជាប់ទៅ constructor PARAMETER ដោយផ្ទាល់
+    // ទើប Spring ដឹងថាត្រូវ inject ជា lazy proxy។ Lombok មិន copy
+    // @Lazy ពី field annotation ទៅ generated constructor ទេ
+    public AccountSecurityServiceImpl(
+            UserRepository userRepository,
+            SecurityProperties securityProperties,
+            @Lazy AccountSecurityService self
+    ) {
+        this.userRepository = userRepository;
+        this.securityProperties = securityProperties;
+        this.self = self;
+    }
 
     @Override
     @Transactional
@@ -48,13 +61,24 @@ public class AccountSecurityServiceImpl
         if (Boolean.TRUE.equals(user.getAccountLocked())) {
 
             if (canAutoUnlock(user)) {
-                unlockAccount(user);
+                self.unlockAccount(user);
                 return;
             }
 
             throw new UnauthorizedException(
                     "Account is locked."
             );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void tryAutoUnlock(User user) {
+
+        if (Boolean.TRUE.equals(user.getAccountLocked())
+                && canAutoUnlock(user)) {
+
+            self.unlockAccount(user);
         }
     }
 

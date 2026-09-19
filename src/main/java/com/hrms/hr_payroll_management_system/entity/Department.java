@@ -52,4 +52,7 @@ public class Department extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
+    @Column(length = 255)
+    private String logoUrl;
 }

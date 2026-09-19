@@ -6,7 +6,9 @@ import lombok.*;
 import com.hrms.hr_payroll_management_system.enums.Status;
 import java.util.HashSet;
 import java.util.Set;
+
 import java.time.LocalDateTime;
+import com.hrms.hr_payroll_management_system.enums.AuthProvider;
 
 @Entity
 @Table(name = "users")
@@ -30,8 +32,8 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false, length = 255)
-    private String password;
+    @Column(length = 255)
+        private String password;
 
     @Column(length = 20)
     private String phone;
@@ -53,6 +55,14 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean enabled = true;
 
+    @Enumerated(EnumType.STRING)
+        @Column(length = 20)
+        @Builder.Default
+        private AuthProvider provider = AuthProvider.LOCAL;
+
+        @Column(name = "provider_id", length = 255)
+        private String providerId;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
@@ -68,5 +78,7 @@ public class User extends BaseEntity {
 
     @Column(name = "locked_at")
     private LocalDateTime lockedAt;
+
+    
     
     }

@@ -9,10 +9,30 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDateTime;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+        @ExceptionHandler(DataIntegrityViolationException.class)   // ← method ថ្មី
+        public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+                DataIntegrityViolationException ex,
+                HttpServletRequest request) {
 
+                String message =
+                        "This record cannot be deleted or updated because " +
+                        "other records still reference it. Remove or reassign " +
+                        "those first.";
+
+                ErrorResponse response = ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.CONFLICT.value())
+                        .error(HttpStatus.CONFLICT.getReasonPhrase())
+                        .message(message)
+                        .path(request.getRequestURI())
+                        .build();
+
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(
             ResourceNotFoundException ex,

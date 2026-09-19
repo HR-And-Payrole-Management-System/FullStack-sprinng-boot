@@ -88,7 +88,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ROLE_DELETE')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ROLE_UPDATE')")
     public ResponseEntity<ApiResponse<RoleResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateRoleRequest request) {

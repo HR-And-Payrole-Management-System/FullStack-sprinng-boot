@@ -36,3 +36,10 @@ build/
 .env
 .env.local
 .env.*.local
+upload/
+vendor/
+composer.json
+composer.lock
+*.zip
+@{app.upload.dir}/
+/hr-payroll-management-system/

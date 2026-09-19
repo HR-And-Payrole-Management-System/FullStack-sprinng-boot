@@ -6,8 +6,26 @@ public interface MailService {
             String email,
             String resetToken
     );
-        void sendEmailVerification(
+
+    void sendEmailVerification(
             String email,
             String verificationToken
+    );
+
+    void sendOtpEmail(
+            String email,
+            String otpCode
+    );
+
+    void sendNewDeviceAlert(
+            String email,
+            String ipAddress,
+            String userAgent
+    );
+        void sendContactFormEmail(
+            String name,
+            String senderEmail,
+            String subject,
+            String message
     );
 }

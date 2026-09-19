@@ -3,7 +3,7 @@ package com.hrms.hr_payroll_management_system.service;
 import com.hrms.hr_payroll_management_system.dto.request.company.CreateCompanyRequest;
 import com.hrms.hr_payroll_management_system.dto.request.company.UpdateCompanyRequest;
 import com.hrms.hr_payroll_management_system.dto.response.company.CompanyResponse;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface CompanyService {
@@ -22,4 +22,6 @@ public interface CompanyService {
     );
 
     void delete(Long id);
+
+    CompanyResponse uploadLogo(Long id, MultipartFile file);
 }

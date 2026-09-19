@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -146,4 +147,20 @@ public class BranchController {
                 .noContent()
                 .build();
     }
+        @PostMapping(value = "/{id}/logo", consumes = "multipart/form-data")
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('BRANCH_UPDATE')")
+        public ResponseEntity<ApiResponse<BranchResponse>> uploadLogo(
+                @PathVariable Long id,
+                @RequestParam("file") MultipartFile file
+        ) {
+        BranchResponse branch = branchService.uploadLogo(id, file);
+
+        return ResponseEntity.ok(
+                ApiResponse.<BranchResponse>builder()
+                        .success(true)
+                        .message("Branch logo uploaded successfully.")
+                        .data(branch)
+                        .build()
+        );
+        }
 }

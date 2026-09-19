@@ -39,15 +39,24 @@ import com.hrms.hr_payroll_management_system.repository.specification.EmployeeSp
 import com.hrms.hr_payroll_management_system.service.EmployeeService;
 import com.hrms.hr_payroll_management_system.service.OrganizationIntegrityService;
 import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
-
+import com.hrms.hr_payroll_management_system.dto.response.employee.TeamMemberResponse;
 import lombok.RequiredArgsConstructor;
-
+import com.hrms.hr_payroll_management_system.repository.UserRepository;
+import com.hrms.hr_payroll_management_system.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import com.hrms.hr_payroll_management_system.enums.AuditAction;
-import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 import org.springframework.stereotype.Service;
@@ -66,7 +75,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final CompanyRepository companyRepository;
     private final BranchRepository branchRepository;
     private final OrganizationIntegrityService organizationIntegrityService;
-private final AuditLogService auditLogService;
+    private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
     // =========================================================
     // CREATE
     // =========================================================
@@ -203,10 +213,10 @@ private final AuditLogService auditLogService;
     // =========================================================
 
     @Override
-    public EmployeeResponse update(
-            Long id,
-            UpdateEmployeeRequest request
-    ) {
+        public EmployeeResponse update(
+                Long id,
+                UpdateEmployeeRequest request
+        ) {
 
         Employee employee = getEmployee(id);
 
@@ -216,9 +226,9 @@ private final AuditLogService auditLogService;
                         request.getEmployeeCode()
                 )) {
 
-            throw new DuplicateResourceException(
-                    "Employee code already exists."
-            );
+                throw new DuplicateResourceException(
+                        "Employee code already exists."
+                );
         }
 
         if (!employee.getEmail()
@@ -227,15 +237,33 @@ private final AuditLogService auditLogService;
                         request.getEmail()
                 )) {
 
-            throw new DuplicateResourceException(
-                    "Employee email already exists."
-            );
+                throw new DuplicateResourceException(
+                        "Employee email already exists."
+                );
         }
 
         employeeMapper.updateEntity(
                 request,
                 employee
         );
+
+        if (request.getUserId() != null) {
+
+                User linkedUser = userRepository.findById(request.getUserId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("User not found.")
+                        );
+
+                employeeRepository.findByUserId(request.getUserId())
+                        .filter(other -> !other.getId().equals(employee.getId()))
+                        .ifPresent(other -> {
+                        throw new DuplicateResourceException(
+                                "This user account is already linked to another employee."
+                        );
+                        });
+
+                employee.setUser(linkedUser);
+        }
 
         Employee updatedEmployee =
         employeeRepository.save(employee);
@@ -250,7 +278,7 @@ private final AuditLogService auditLogService;
         return employeeMapper.toResponse(
                 updatedEmployee
         );
-    }
+        }
 
     // =========================================================
     // DELETE
@@ -718,4 +746,95 @@ private final AuditLogService auditLogService;
                         )
                 );
     }
+    @Override
+        public void unlinkUser(Long employeeId) {
+
+        Employee employee = getEmployee(employeeId);
+        employee.setUser(null);
+        employeeRepository.save(employee);
+
+        auditLogService.log(
+                AuditAction.UPDATE,
+                "EMPLOYEE",
+                employee.getId(),
+                "User account unlinked."
+        );
+        }
+        @Value("${app.upload.dir}")
+        private String uploadDir;
+
+        private static final List<String> ALLOWED_TYPES =
+                List.of("image/jpeg", "image/png", "image/webp");
+        private static final long MAX_SIZE_BYTES = 3L * 1024 * 1024; // 3MB
+
+        @Override
+        public EmployeeResponse uploadPhoto(Long employeeId, MultipartFile file) {
+
+        Employee employee = getEmployee(employeeId);
+
+        if (file == null || file.isEmpty()) {
+                throw new BadRequestException("No file was uploaded.");
+        }
+        if (file.getSize() > MAX_SIZE_BYTES) {
+                throw new BadRequestException("Photo must be 3MB or smaller.");
+        }
+        if (!ALLOWED_TYPES.contains(file.getContentType())) {
+                throw new BadRequestException("Only JPG, PNG, or WEBP images are allowed.");
+        }
+
+        try {
+                Path dir = Paths.get(uploadDir);
+                Files.createDirectories(dir);
+
+                // delete old photo file if one exists, so we don't leak orphan files
+                if (employee.getPhotoUrl() != null) {
+                Path oldFile = Paths.get(".", employee.getPhotoUrl());
+                Files.deleteIfExists(oldFile);
+                }
+
+                String ext = switch (file.getContentType()) {
+                case "image/png" -> ".png";
+                case "image/webp" -> ".webp";
+                default -> ".jpg";
+                };
+                String filename = "emp-" + employeeId + "-" + UUID.randomUUID() + ext;
+                Path target = dir.resolve(filename);
+
+                Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+                // public URL path — matches the static resource mapping added in Step 2
+                employee.setPhotoUrl("/uploads/photos/" + filename);
+                employeeRepository.save(employee);
+
+        } catch (IOException e) {
+                throw new BadRequestException("Failed to save the uploaded photo.");
+        }
+
+        return employeeMapper.toResponse(employee);
+        }
+        @Override
+        @Transactional(readOnly = true)
+        public List<TeamMemberResponse> getMyTeam(String email) {
+
+        Employee self = employeeRepository.findByEmail(email)
+                .orElse(null);
+
+        if (self == null || self.getDepartment() == null) {
+                return List.of(); // no employee record or no department assigned
+        }
+
+        return employeeRepository.findByDepartmentId(self.getDepartment().getId())
+                .stream()
+                .filter(e -> !e.getId().equals(self.getId())) // exclude myself
+                .map(e -> TeamMemberResponse.builder()
+                        .id(e.getId())
+                        .employeeCode(e.getEmployeeCode())
+                        .firstName(e.getFirstName())
+                        .lastName(e.getLastName())
+                        .positionName(e.getPosition() != null ? e.getPosition().getName() : null)
+                        .photoUrl(e.getPhotoUrl())
+                        .status(e.getStatus().name())
+                        .build())
+                .toList();
+        }
 }

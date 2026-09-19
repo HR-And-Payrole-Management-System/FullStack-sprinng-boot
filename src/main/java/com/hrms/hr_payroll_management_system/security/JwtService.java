@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY =
-            "VGhpc0lzQVN1cGVyU2VjcmV0S2V5Rm9ySnd0VGhhdElzTG9uZ0Vub3VnaA==";
+    @Value("${app.security.jwt-secret}")
+    private String secretKey;
 
-    private static final long ACCESS_TOKEN_EXPIRATION =
-            1000L * 60 * 60;
+    @Value("${app.security.access-token-expiration-seconds}")
+    private long accessTokenExpirationSeconds;
 
     public String generateToken(UserDetails userDetails) {
 
@@ -43,7 +44,7 @@ public class JwtService {
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
-                                        + ACCESS_TOKEN_EXPIRATION
+                                        + (accessTokenExpirationSeconds * 1000L)
                         )
                 )
                 .signWith(getSigningKey())
@@ -105,7 +106,7 @@ public class JwtService {
     private SecretKey getSigningKey() {
 
         byte[] keyBytes =
-                Decoders.BASE64.decode(SECRET_KEY);
+                Decoders.BASE64.decode(secretKey);
 
         return Keys.hmacShaKeyFor(keyBytes);
     }

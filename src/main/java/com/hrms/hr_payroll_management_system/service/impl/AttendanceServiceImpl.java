@@ -2,6 +2,7 @@ package com.hrms.hr_payroll_management_system.service.impl;
 
 import com.hrms.hr_payroll_management_system.common.pagination.PageResponse;
 import com.hrms.hr_payroll_management_system.dto.request.attendance.AdjustAttendanceRequest;
+import com.hrms.hr_payroll_management_system.dto.request.notification.CreateNotificationRequest;
 import com.hrms.hr_payroll_management_system.dto.response.attendance.AttendanceMonthlySummaryResponse;
 import com.hrms.hr_payroll_management_system.dto.response.attendance.AttendanceResponse;
 import com.hrms.hr_payroll_management_system.entity.Attendance;
@@ -9,6 +10,7 @@ import com.hrms.hr_payroll_management_system.entity.Employee;
 import com.hrms.hr_payroll_management_system.entity.EmployeeWorkSchedule;
 import com.hrms.hr_payroll_management_system.entity.WorkSchedule;
 import com.hrms.hr_payroll_management_system.enums.AttendanceStatus;
+import com.hrms.hr_payroll_management_system.enums.NotificationType;
 import com.hrms.hr_payroll_management_system.exception.BadRequestException;
 import com.hrms.hr_payroll_management_system.exception.ResourceNotFoundException;
 import com.hrms.hr_payroll_management_system.repository.AttendanceRepository;
@@ -17,7 +19,9 @@ import com.hrms.hr_payroll_management_system.repository.EmployeeWorkScheduleRepo
 import com.hrms.hr_payroll_management_system.repository.HolidayRepository;
 import com.hrms.hr_payroll_management_system.repository.specification.AttendanceSpecification;
 import com.hrms.hr_payroll_management_system.service.AttendanceCalculationService;
+import com.hrms.hr_payroll_management_system.service.AttendanceQrService;
 import com.hrms.hr_payroll_management_system.service.AttendanceService;
+import com.hrms.hr_payroll_management_system.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -28,9 +32,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +46,10 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeWorkScheduleRepository employeeWorkScheduleRepository;
     private final AttendanceCalculationService attendanceCalculationService;
-        private final HolidayRepository holidayRepository;
+    private final HolidayRepository holidayRepository;
+    private final AttendanceQrService attendanceQrService;
+    private final NotificationService notificationService;
+
     @Override
     public AttendanceResponse checkIn(Long employeeId) {
 
@@ -114,8 +122,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendance.setCheckOutTime(
                 LocalDateTime.now()
         );
-        
-        
 
         attendanceCalculationService.calculate(
                 attendance
@@ -124,7 +130,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         Attendance saved =
                 attendanceRepository.save(attendance);
 
-            
         return mapResponse(saved);
     }
 
@@ -196,6 +201,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .note(attendance.getNote())
                 .build();
     }
+
     @Override
     public AttendanceResponse adjust(
             Long attendanceId,
@@ -246,6 +252,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 attendanceRepository.save(attendance)
         );
     }
+
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AttendanceResponse> search(
@@ -313,6 +320,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .last(result.isLast())
                 .build();
     }
+
     @Override
     @Transactional(readOnly = true)
     public AttendanceMonthlySummaryResponse getMonthlySummary(
@@ -404,6 +412,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 )
                 .build();
     }
+
     private void markAbsentEmployees(LocalDate workDate) {
 
         boolean holiday =
@@ -420,6 +429,126 @@ public class AttendanceServiceImpl implements AttendanceService {
         // Find employees who are expected to work on this date.
         // Check whether they already have attendance.
         // If they do not have attendance, create ABSENT record.
+    }
+
+    @Override
+    public AttendanceResponse checkInSelf(String email) {
+
+        Employee employee = getEmployeeByEmail(email);
+
+        return checkIn(employee.getId());
+    }
+
+    @Override
+    public AttendanceResponse checkOutSelf(String email) {
+
+        Employee employee = getEmployeeByEmail(email);
+
+        return checkOut(employee.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AttendanceResponse getTodayForSelf(String email) {
+
+        Employee employee = getEmployeeByEmail(email);
+
+        return attendanceRepository
+                .findByEmployeeIdAndWorkDate(
+                        employee.getId(),
+                        LocalDate.now()
+                )
+                .map(this::mapResponse)
+                .orElse(null);
+    }
+
+    private Employee getEmployeeByEmail(String email) {
+
+        return employeeRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No employee record is linked to your account."
+                        )
+                );
+    }
+
+    @Override
+    public AttendanceResponse scanQr(String email, String token) {
+
+        Employee employee = getEmployeeByEmail(email);
+
+        Long branchId = attendanceQrService.validateToken(token);
+
+        if (employee.getBranch() != null
+                && !employee.getBranch().getId().equals(branchId)) {
+            throw new BadRequestException(
+                    "This QR code belongs to a different branch."
+            );
         }
-    
+
+        Optional<Attendance> today =
+                attendanceRepository.findByEmployeeIdAndWorkDate(
+                        employee.getId(),
+                        LocalDate.now()
+                );
+
+        if (today.isEmpty()) {
+            AttendanceResponse response = checkIn(employee.getId());
+            notifyAttendanceManagers(
+                    employee,
+                    NotificationType.ATTENDANCE_CHECKED_IN,
+                    employee.getFirstName() + " " + employee.getLastName()
+                            + " checked in via QR at "
+                            + response.getCheckInTime()
+            );
+            return response;
+        }
+
+        if (today.get().getCheckOutTime() == null) {
+            AttendanceResponse response = checkOut(employee.getId());
+            notifyAttendanceManagers(
+                    employee,
+                    NotificationType.ATTENDANCE_CHECKED_OUT,
+                    employee.getFirstName() + " " + employee.getLastName()
+                            + " checked out via QR at "
+                            + response.getCheckOutTime()
+            );
+            return response;
+        }
+
+        throw new BadRequestException(
+                "You have already completed attendance for today."
+        );
+    }
+
+    // Alerts everyone who can manage attendance (i.e. holds the
+    // ATTENDANCE_ADJUST permission — the same permission that
+    // guards the kiosk screen) that a QR check-in/out happened.
+    // The scanning employee is excluded so HR staff don't get
+    // notified about their own scan.
+    private void notifyAttendanceManagers(
+            Employee scannedEmployee,
+            NotificationType type,
+            String message
+    ) {
+        List<Employee> managers =
+                employeeRepository.findByPermissionName("ATTENDANCE_ADJUST");
+
+        for (Employee manager : managers) {
+
+            if (manager.getId().equals(scannedEmployee.getId())) {
+                continue;
+            }
+
+            CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+            notifRequest.setEmployeeId(manager.getId());
+            notifRequest.setType(type);
+            notifRequest.setTitle("Attendance check-in/out");
+            notifRequest.setMessage(message);
+            notifRequest.setReferenceType("ATTENDANCE");
+            notifRequest.setReferenceId(scannedEmployee.getId());
+
+            notificationService.create(notifRequest);
+        }
+    }
 }

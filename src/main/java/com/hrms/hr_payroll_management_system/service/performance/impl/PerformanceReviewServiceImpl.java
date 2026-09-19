@@ -19,7 +19,9 @@ import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
 import com.hrms.hr_payroll_management_system.service.performance.PerformanceReviewService;
 
 import lombok.RequiredArgsConstructor;
-
+import com.hrms.hr_payroll_management_system.dto.request.notification.CreateNotificationRequest;
+import com.hrms.hr_payroll_management_system.enums.NotificationType;
+import com.hrms.hr_payroll_management_system.service.notification.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,7 @@ public class PerformanceReviewServiceImpl
     private final PerformanceCycleRepository cycleRepository;
     private final EmployeeRepository employeeRepository;
 private final AuditLogService auditLogService;
+    private final NotificationService notificationService; 
     @Override
     public PerformanceReviewResponse selfReview(
             Long employeeId,
@@ -119,17 +122,25 @@ private final AuditLogService auditLogService;
        PerformanceReview saved =
         reviewRepository.save(review);
 
-        auditLogService.log(
+               auditLogService.log(
                 AuditAction.UPDATE,
                 "PERFORMANCE_REVIEW",
                 saved.getId(),
                 "Manager review submitted."
         );
 
+        CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+        notifRequest.setEmployeeId(employeeId);
+        notifRequest.setType(NotificationType.PERFORMANCE_REVIEW);
+        notifRequest.setTitle("Manager review submitted");
+        notifRequest.setMessage("Your manager has completed your performance review.");
+        notifRequest.setReferenceType("PERFORMANCE_REVIEW");
+        notifRequest.setReferenceId(saved.getId());
+        notificationService.create(notifRequest);
+
         return map(saved);
                 
         }
-
     @Override
     public PerformanceReviewResponse complete(
             Long employeeId,
@@ -234,12 +245,23 @@ private final AuditLogService auditLogService;
         PerformanceReview saved =
         reviewRepository.save(review);
 
-        auditLogService.log(
+                auditLogService.log(
                 AuditAction.PROCESS,
                 "PERFORMANCE_REVIEW",
                 saved.getId(),
                 "Performance review completed."
         );
+
+        CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+        notifRequest.setEmployeeId(employeeId);
+        notifRequest.setType(NotificationType.PERFORMANCE_REVIEW);
+        notifRequest.setTitle("Performance review completed");
+        notifRequest.setMessage(
+                "Your performance review is complete. Final score: " + finalScore + "%."
+        );
+        notifRequest.setReferenceType("PERFORMANCE_REVIEW");
+        notifRequest.setReferenceId(saved.getId());
+        notificationService.create(notifRequest);
 
         return map(saved);
     }

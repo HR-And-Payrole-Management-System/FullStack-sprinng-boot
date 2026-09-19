@@ -13,6 +13,14 @@ public interface AttendanceService {
 
     AttendanceResponse checkOut(Long employeeId);
 
+    // Self-service — resolves the employee record from the logged-in
+    // user's email, so employees can only ever punch their own record.
+    AttendanceResponse checkInSelf(String email);
+
+    AttendanceResponse checkOutSelf(String email);
+
+    AttendanceResponse getTodayForSelf(String email); // null if not checked in yet
+
     AttendanceResponse getById(Long id);
 
     AttendanceResponse adjust(
@@ -36,4 +44,5 @@ AttendanceMonthlySummaryResponse getMonthlySummary(
         int year,
         int month
 );
+    AttendanceResponse scanQr(String email, String token);
 }

@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    display: block;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  /* Visible focus ring for keyboard users on every interactive element
+     that doesn't already define its own (buttons/links already covered
+     in components.css) */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--color-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0 0 var(--radius-card) 0;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    left: 0;
+  }
+}

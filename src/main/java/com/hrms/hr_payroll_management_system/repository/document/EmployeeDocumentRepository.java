@@ -34,4 +34,5 @@ public interface EmployeeDocumentRepository
                 LocalDate date,
                 List<DocumentStatus> statuses
         );
+    long countByStatus(DocumentStatus status);    
 }

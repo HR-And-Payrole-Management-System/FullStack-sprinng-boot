@@ -18,6 +18,8 @@ public class UpdateHolidayRequest {
     @NotNull
     private LocalDate holidayDate;
 
+    private LocalDate endDate;   // ➕ បន្ថែមបន្ទាត់នេះ
+
     @NotNull
     private HolidayType type;
 

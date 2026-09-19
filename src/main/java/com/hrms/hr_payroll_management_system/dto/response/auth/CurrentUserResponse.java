@@ -34,4 +34,8 @@ public class CurrentUserResponse {
     private Set<String> roles;
 
     private Set<String> permissions;
+
+    private Long employeeId;
+
+    private String photoUrl;
 }

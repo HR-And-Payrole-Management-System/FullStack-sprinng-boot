@@ -19,4 +19,8 @@ public class DashboardSummaryResponse {
     private long totalBranches;
     private long totalDepartments;
     private long totalPositions;
+
+    // ➕ Trend fields — approximate, based on hireDate (see caveat above)
+    private Double totalEmployeesDeltaPercent;   // null if no baseline data
+    private String totalEmployeesDeltaDirection; // "up" | "down" | null
 }

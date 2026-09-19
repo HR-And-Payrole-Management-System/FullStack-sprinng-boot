@@ -1,31 +1,52 @@
 package com.hrms.hr_payroll_management_system.service.dashboard;
 
+import com.hrms.hr_payroll_management_system.dto.response.announcement.AnnouncementResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.AttendanceDashboardResponse;
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.ComplianceAlertResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.DashboardSummaryResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.EmployeeDashboardResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.LeaveDashboardResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.OrganizationDashboardResponse;
 import com.hrms.hr_payroll_management_system.dto.response.dashboard.PayrollDashboardResponse;
-
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.PendingApprovalsResponse;
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.RecentActivityResponse;
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.RecruitmentPipelineResponse;
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.UpcomingBirthdayResponse;
+import com.hrms.hr_payroll_management_system.dto.response.holiday.HolidayResponse;
+import com.hrms.hr_payroll_management_system.dto.response.dashboard.AttendanceTrendPointResponse;
+import java.util.List;
 import java.time.LocalDate;
+
+
 
 public interface DashboardService {
 
-    // Step 15-1
-    DashboardSummaryResponse getSummary();
+    DashboardSummaryResponse getSummary(Long departmentId);
 
-    // Step 15-2
-    EmployeeDashboardResponse getEmployeeStats();
+    EmployeeDashboardResponse getEmployeeStats(Long departmentId);
 
-    // Step 15-3
     AttendanceDashboardResponse getAttendanceStats(LocalDate date);
 
-    // Step 15-4
     LeaveDashboardResponse getLeaveStats(Integer year);
 
-    // Step 15-5
     PayrollDashboardResponse getPayrollStats(Integer year, Integer month);
 
-    // Step 15-6
     OrganizationDashboardResponse getOrganizationStats();
+
+    PendingApprovalsResponse getPendingApprovals();
+
+    RecruitmentPipelineResponse getRecruitmentPipeline();
+
+    Integer getTrainingCompletion();
+    List<HolidayResponse> getUpcomingHolidays(int limit);
+
+    List<UpcomingBirthdayResponse> getBirthdaysThisMonth();
+
+    List<AnnouncementResponse> getRecentAnnouncements(int limit);
+
+    List<ComplianceAlertResponse> getComplianceAlerts();
+
+    List<RecentActivityResponse> getRecentActivity(int limit);
+
+    List<AttendanceTrendPointResponse> getAttendanceTrend(int days);
 }

@@ -12,7 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
-
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -189,5 +189,64 @@ public class AttendanceController {
                         .build()
         );
     }
-        
+        // ============ Self-service (any logged-in user, own record only) ============
+
+    @PostMapping("/check-in")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<AttendanceResponse>> checkInSelf(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<AttendanceResponse>builder()
+                        .success(true)
+                        .message("Check-in successful.")
+                        .data(
+                                attendanceService.checkInSelf(
+                                        authentication.getName()
+                                )
+                        )
+                        .build()
+        );
+    }
+
+    @PostMapping("/check-out")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<AttendanceResponse>> checkOutSelf(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<AttendanceResponse>builder()
+                        .success(true)
+                        .message("Check-out successful.")
+                        .data(
+                                attendanceService.checkOutSelf(
+                                        authentication.getName()
+                                )
+                        )
+                        .build()
+        );
+    }
+
+    @GetMapping("/today")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<AttendanceResponse>> getTodayForSelf(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<AttendanceResponse>builder()
+                        .success(true)
+                        .message("Today's attendance retrieved successfully.")
+                        .data(
+                                attendanceService.getTodayForSelf(
+                                        authentication.getName()
+                                )
+                        )
+                        .build()
+        );
+    }
+    
+
 }

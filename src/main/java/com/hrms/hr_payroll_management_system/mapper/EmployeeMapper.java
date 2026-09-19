@@ -23,6 +23,7 @@ public interface EmployeeMapper {
     @Mapping(target = "department", ignore = true)
     @Mapping(target = "position", ignore = true)
     @Mapping(target = "manager", ignore = true)
+    
     Employee toEntity(CreateEmployeeRequest request);
 
 
@@ -70,6 +71,7 @@ public interface EmployeeMapper {
             target = "managerName",
             expression = "java(getManagerName(employee))"
     )
+    @Mapping(target = "linkedUserEmail", expression = "java(employee.getUser() != null ? employee.getUser().getEmail() : null)")
     EmployeeResponse toResponse(Employee employee);
 
 
@@ -86,7 +88,7 @@ public interface EmployeeMapper {
     @Mapping(target = "department", ignore = true)
     @Mapping(target = "position", ignore = true)
     @Mapping(target = "manager", ignore = true)
-
+    @Mapping(target = "user", ignore = true)
     void updateEntity(
             UpdateEmployeeRequest request,
             @MappingTarget Employee employee

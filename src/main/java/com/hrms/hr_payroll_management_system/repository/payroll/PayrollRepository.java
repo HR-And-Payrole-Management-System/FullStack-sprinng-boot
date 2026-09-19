@@ -23,4 +23,5 @@ public interface PayrollRepository
             Integer year,
             Integer month
     );
+    long countByStatus(com.hrms.hr_payroll_management_system.enums.PayrollStatus status);
 }

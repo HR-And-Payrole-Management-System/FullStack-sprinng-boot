@@ -11,8 +11,8 @@ import lombok.*;
         name = "positions",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_position_name",
-                        columnNames = "name"
+                        name = "uk_position_name_department", // was uk_position_name on `name` alone
+                        columnNames = {"name", "department_id"}
                 )
         }
 )

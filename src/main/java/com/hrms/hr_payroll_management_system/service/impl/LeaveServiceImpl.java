@@ -1,5 +1,6 @@
 package com.hrms.hr_payroll_management_system.service.impl;
 
+import com.hrms.hr_payroll_management_system.common.pagination.PageResponse;
 import com.hrms.hr_payroll_management_system.dto.request.leave.CreateLeaveRequest;
 import com.hrms.hr_payroll_management_system.dto.request.leave.ReviewLeaveRequest;
 import com.hrms.hr_payroll_management_system.dto.response.leave.LeaveRequestResponse;
@@ -19,10 +20,19 @@ import com.hrms.hr_payroll_management_system.service.LeaveService;
 import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.hrms.hr_payroll_management_system.repository.HolidayRepository;
+import com.hrms.hr_payroll_management_system.enums.EmployeeStatus;
+import com.hrms.hr_payroll_management_system.enums.Status;
+import java.util.List;
 import com.hrms.hr_payroll_management_system.enums.AuditAction;
+import com.hrms.hr_payroll_management_system.dto.request.notification.CreateNotificationRequest;
+import com.hrms.hr_payroll_management_system.enums.NotificationType;
+import com.hrms.hr_payroll_management_system.service.notification.NotificationService;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -39,6 +49,7 @@ public class LeaveServiceImpl implements LeaveService {
     private final EmployeeRepository employeeRepository;
         private final HolidayRepository holidayRepository;
         private final AuditLogService auditLogService;
+        private final NotificationService notificationService;
     @Override
     public LeaveRequestResponse requestLeave(
             Long employeeId,
@@ -113,9 +124,60 @@ public class LeaveServiceImpl implements LeaveService {
                         .status(LeaveRequestStatus.PENDING)
                         .build();
 
-        return mapResponse(
-                leaveRequestRepository.save(leaveRequest)
-        );
+        LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
+
+        if (employee.getManager() != null) {
+            CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+            notifRequest.setEmployeeId(employee.getManager().getId());
+            notifRequest.setType(NotificationType.LEAVE_SUBMITTED);
+            notifRequest.setTitle("New leave request");
+            notifRequest.setMessage(
+                    employee.getFirstName() + " " + employee.getLastName()
+                            + " submitted a leave request."
+            );
+            notifRequest.setReferenceType("LEAVE_REQUEST");
+            notifRequest.setReferenceId(saved.getId());
+            notificationService.create(notifRequest);
+        }
+
+        return mapResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<LeaveRequestResponse> getByEmployeeId(
+            Long employeeId,
+            int page,
+            int size
+    ) {
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by("startDate").descending()
+                );
+
+        Page<LeaveRequest> result =
+                leaveRequestRepository.findByEmployeeId(
+                        employeeId,
+                        pageable
+                );
+
+        return PageResponse.<LeaveRequestResponse>builder()
+                .content(
+                        result.getContent()
+                                .stream()
+                                .map(this::mapResponse)
+                                .toList()
+                )
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .first(result.isFirst())
+                .last(result.isLast())
+                .build();
     }
 
     @Override
@@ -188,6 +250,14 @@ public class LeaveServiceImpl implements LeaveService {
                 saved.getId(),
                 "Leave request approved."
         );
+        CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+        notifRequest.setEmployeeId(saved.getEmployee().getId());
+        notifRequest.setType(NotificationType.LEAVE_APPROVED);
+        notifRequest.setTitle("Leave request approved");
+        notifRequest.setMessage("Your leave request has been approved.");
+        notifRequest.setReferenceType("LEAVE_REQUEST");
+        notifRequest.setReferenceId(saved.getId());
+        notificationService.create(notifRequest);
 
         return mapResponse(saved);
     }
@@ -232,6 +302,19 @@ public class LeaveServiceImpl implements LeaveService {
                 saved.getId(),
                 "Leave request rejected."
         );
+
+        CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+        notifRequest.setEmployeeId(saved.getEmployee().getId());
+        notifRequest.setType(NotificationType.LEAVE_REJECTED);
+        notifRequest.setTitle("Leave request rejected");
+        notifRequest.setMessage(
+                request.getComment() != null && !request.getComment().isBlank()
+                        ? "Your leave request was rejected: " + request.getComment()
+                        : "Your leave request has been rejected."
+        );
+        notifRequest.setReferenceType("LEAVE_REQUEST");
+        notifRequest.setReferenceId(saved.getId());
+        notificationService.create(notifRequest);
 
         return mapResponse(saved);
     }
@@ -403,5 +486,37 @@ public class LeaveServiceImpl implements LeaveService {
                         leave.getReviewComment()
                 )
                 .build();
+    }
+        @Override
+        public int accrueYearlyBalances(int year) {
+
+        List<Employee> activeEmployees =
+                employeeRepository.findByStatus(EmployeeStatus.ACTIVE);
+
+        List<LeaveType> activeLeaveTypes =
+                leaveTypeRepository.findByStatus(Status.ACTIVE);
+
+        int created = 0;
+
+        for (Employee employee : activeEmployees) {
+            for (LeaveType leaveType : activeLeaveTypes) {
+
+                boolean exists =
+                        leaveBalanceRepository
+                                .findByEmployeeIdAndLeaveTypeIdAndYear(
+                                        employee.getId(),
+                                        leaveType.getId(),
+                                        year
+                                )
+                                .isPresent();
+
+                if (!exists) {
+                    getOrCreateBalance(employee, leaveType, year);
+                    created++;
+                }
+            }
+        }
+
+        return created;
     }
 }

@@ -36,13 +36,19 @@ public class HolidayServiceImpl
     private final HolidayMapper holidayMapper;
 
     @Override
-    public HolidayResponse create(
-            CreateHolidayRequest request
-    ) {
+        public HolidayResponse create(
+                CreateHolidayRequest request
+        ) {
+
+        // ➕ default endDate = holidayDate បើមិនបំពេញ (single-day holiday)
+        LocalDate effectiveEndDate =
+                request.getEndDate() != null
+                        ? request.getEndDate()
+                        : request.getHolidayDate();
 
         validateDateRange(
                 request.getHolidayDate(),
-                request.getHolidayDate()
+                effectiveEndDate
         );
 
         if (holidayRepository
@@ -51,9 +57,9 @@ public class HolidayServiceImpl
                         request.getHolidayDate()
                 )) {
 
-            throw new DuplicateResourceException(
-                    "Holiday already exists on this date."
-            );
+                throw new DuplicateResourceException(
+                        "Holiday already exists on this date."
+                );
         }
 
         Company company =
@@ -74,6 +80,7 @@ public class HolidayServiceImpl
                         .holidayDate(
                                 request.getHolidayDate()
                         )
+                        .endDate(effectiveEndDate)   // ➕ បន្ថែម
                         .type(request.getType())
                         .company(company)
                         .branch(branch)
@@ -89,7 +96,7 @@ public class HolidayServiceImpl
         return holidayMapper.toResponse(
                 holidayRepository.save(holiday)
         );
-    }
+        }
 
     @Override
     @Transactional(readOnly = true)
@@ -133,13 +140,24 @@ public class HolidayServiceImpl
     }
 
     @Override
-    public HolidayResponse update(
-            Long id,
-            UpdateHolidayRequest request
-    ) {
+        public HolidayResponse update(
+                Long id,
+                UpdateHolidayRequest request
+        ) {
 
         Holiday holiday =
                 getHoliday(id);
+
+        // ➕ default endDate = holidayDate បើមិនបំពេញ
+        LocalDate effectiveEndDate =
+                request.getEndDate() != null
+                        ? request.getEndDate()
+                        : request.getHolidayDate();
+
+        validateDateRange(
+                request.getHolidayDate(),
+                effectiveEndDate
+        );
 
         Company company =
                 getCompany(request.getCompanyId());
@@ -170,9 +188,9 @@ public class HolidayServiceImpl
                         request.getHolidayDate()
                 )) {
 
-            throw new DuplicateResourceException(
-                    "Holiday already exists on this date."
-            );
+                throw new DuplicateResourceException(
+                        "Holiday already exists on this date."
+                );
         }
 
         holiday.setName(
@@ -182,6 +200,8 @@ public class HolidayServiceImpl
         holiday.setHolidayDate(
                 request.getHolidayDate()
         );
+
+        holiday.setEndDate(effectiveEndDate);   // ➕ បន្ថែម
 
         holiday.setType(
                 request.getType()
@@ -205,8 +225,7 @@ public class HolidayServiceImpl
         return holidayMapper.toResponse(
                 holidayRepository.save(holiday)
         );
-    }
-
+        }
     @Override
     public void delete(Long id) {
 
@@ -217,14 +236,12 @@ public class HolidayServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean isHoliday(LocalDate date) {
+        @Transactional(readOnly = true)
+        public boolean isHoliday(LocalDate date) {
 
         return holidayRepository
-                .existsByHolidayDateAndActiveTrue(
-                        date
-                );
-    }
+                .existsByDateInRangeAndActiveTrue(date);   // ➕ ប្តូរ method ថ្មី
+        }
 
     private Holiday getHoliday(Long id) {
 

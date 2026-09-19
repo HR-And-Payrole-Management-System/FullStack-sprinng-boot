@@ -4,11 +4,14 @@ import com.hrms.hr_payroll_management_system.dto.request.document.CreateEmployee
 import com.hrms.hr_payroll_management_system.dto.request.document.UpdateEmployeeDocumentRequest;
 import com.hrms.hr_payroll_management_system.dto.request.document.VerifyDocumentRequest;
 import com.hrms.hr_payroll_management_system.dto.response.document.EmployeeDocumentResponse;
+import com.hrms.hr_payroll_management_system.dto.response.document.UploadedFileResponse;
 import com.hrms.hr_payroll_management_system.entity.document.EmployeeDocument;
 import com.hrms.hr_payroll_management_system.enums.DocumentStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public interface EmployeeDocumentService {
 
@@ -38,9 +41,13 @@ public interface EmployeeDocumentService {
             LocalDate endDate
     );
 
-    int markExpiredDocuments();
+        int markExpiredDocuments();
+
+    int markExpiringSoon(int daysBeforeExpiry);
 
     void delete(Long id);
+
+    UploadedFileResponse uploadFile(MultipartFile file);
 
     
 }

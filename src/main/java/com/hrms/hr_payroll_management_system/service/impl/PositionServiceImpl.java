@@ -43,11 +43,10 @@ public class PositionServiceImpl
             CreatePositionRequest request
     ) {
 
-        if (positionRepository.existsByName(request.getName())) {
-            throw new DuplicateResourceException(
-                    "Position already exists."
-            );
-        }
+        // NOTE: no name-uniqueness check here anymore — a position has no
+        // department yet at creation time, so "is this name taken" can't be
+        // answered meaningfully until assignOrganization() runs, which already
+        // does the correct department-scoped check below.
 
         Position position =
                 positionMapper.toEntity(request);
@@ -96,12 +95,25 @@ public class PositionServiceImpl
                                 )
                         );
 
-        if (!position.getName().equals(request.getName())
-                && positionRepository.existsByName(
-                request.getName()
-        )) {
+        boolean nameChanged =
+                !position.getName().equals(request.getName());
+
+        Long departmentId =
+                position.getDepartment() != null
+                        ? position.getDepartment().getId()
+                        : null;
+
+        // Scoped to this position's own department instead of checking the
+        // name globally — a rename to "STAFF" should only fail if another
+        // position named "STAFF" already exists in the SAME department.
+        if (nameChanged
+                && departmentId != null
+                && positionRepository.existsByNameAndDepartmentId(
+                        request.getName(),
+                        departmentId
+                )) {
             throw new DuplicateResourceException(
-                    "Position already exists."
+                    "Position name already exists in this department."
             );
         }
 

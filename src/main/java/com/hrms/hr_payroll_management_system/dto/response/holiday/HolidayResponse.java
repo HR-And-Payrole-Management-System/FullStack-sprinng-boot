@@ -15,6 +15,8 @@ public class HolidayResponse {
 
     private LocalDate holidayDate;
 
+    private LocalDate endDate;
+
     private String type;
 
     private Long companyId;

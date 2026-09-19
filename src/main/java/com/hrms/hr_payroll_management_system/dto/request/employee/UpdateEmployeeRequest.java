@@ -54,6 +54,8 @@ public class UpdateEmployeeRequest {
 
     private LocalDate contractEndDate;
 
+    private Long userId;
+
     @AssertTrue(
             message = "Contract end date must be after contract start date"
     )

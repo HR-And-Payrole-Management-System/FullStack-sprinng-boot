@@ -16,6 +16,9 @@ public class RoleResponse {
     private String description;
 
     private String status;
+
+    private String badgeColor;
+    
     private Set<PermissionResponse> permissions;
 
 }

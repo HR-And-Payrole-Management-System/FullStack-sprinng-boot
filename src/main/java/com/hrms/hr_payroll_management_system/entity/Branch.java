@@ -58,4 +58,9 @@ public class Branch extends BaseEntity {
             nullable = false
     )
     private Company company;
+
+    @Column (length = 255)
+    private String logoUrl;
+
+    
 }

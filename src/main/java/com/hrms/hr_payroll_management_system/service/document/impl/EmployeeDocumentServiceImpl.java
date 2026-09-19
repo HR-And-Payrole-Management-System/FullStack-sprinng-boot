@@ -24,7 +24,19 @@ import com.hrms.hr_payroll_management_system.enums.NotificationType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.hrms.hr_payroll_management_system.enums.AuditAction;
+import com.hrms.hr_payroll_management_system.dto.response.document.UploadedFileResponse;
+import com.hrms.hr_payroll_management_system.exception.BadRequestException;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.UUID;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -351,6 +363,60 @@ public class EmployeeDocumentServiceImpl
 
         documentRepository.delete(document);
     }
+            @Override
+        public int markExpiringSoon(int daysBeforeExpiry) {
+
+        List<EmployeeDocument> documents =
+                documentRepository
+                        .findByExpiryDateBetween(
+                                LocalDate.now(),
+                                LocalDate.now().plusDays(daysBeforeExpiry)
+                        )
+                        .stream()
+                        .filter(doc ->
+                                doc.getStatus() == DocumentStatus.PENDING
+                                        || doc.getStatus() == DocumentStatus.VERIFIED
+                        )
+                        .toList();
+
+        for (EmployeeDocument document
+                : documents) {
+
+                CreateNotificationRequest request =
+                        new CreateNotificationRequest();
+
+                request.setEmployeeId(
+                        document.getEmployee().getId()
+                );
+
+                request.setType(
+                        NotificationType.DOCUMENT_EXPIRING
+                );
+
+                request.setTitle(
+                        "Document expiring soon"
+                );
+
+                request.setMessage(
+                        document.getDocumentType().getName()
+                                + " will expire on "
+                                + document.getExpiryDate()
+                                + "."
+                );
+
+                request.setReferenceType(
+                        "EMPLOYEE_DOCUMENT"
+                );
+
+                request.setReferenceId(
+                        document.getId()
+                );
+
+                notificationService.create(request);
+        }
+
+        return documents.size();
+        }
 
     private EmployeeDocument getDocument(
             Long id
@@ -440,4 +506,48 @@ public class EmployeeDocumentServiceImpl
                 )
                 .build();
     }
+    
+    @Value("${app.upload.documents-dir}")
+        private String documentsDir;
+
+        private static final List<String> ALLOWED_DOCUMENT_TYPES = List.of(
+                "image/jpeg", "image/png", "image/webp",
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        private static final long MAX_DOCUMENT_BYTES = 10L * 1024 * 1024; // 10MB
+
+        @Override
+        public UploadedFileResponse uploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+                throw new BadRequestException("No file was uploaded.");
+        }
+        if (file.getSize() > MAX_DOCUMENT_BYTES) {
+                throw new BadRequestException("File must be 10MB or smaller.");
+        }
+        if (!ALLOWED_DOCUMENT_TYPES.contains(file.getContentType())) {
+                throw new BadRequestException("This file type is not allowed. Use JPG, PNG, PDF, or Word.");
+        }
+
+        try {
+                Path dir = Paths.get(documentsDir);
+                Files.createDirectories(dir);
+
+                String original = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
+                String ext = original.contains(".") ? original.substring(original.lastIndexOf('.')) : "";
+                String storedName = "doc-" + UUID.randomUUID() + ext;
+                Path target = dir.resolve(storedName);
+
+                Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+                return UploadedFileResponse.builder()
+                        .fileName(original)
+                        .fileUrl("/uploads/documents/" + storedName)
+                        .build();
+
+        } catch (IOException e) {
+                throw new BadRequestException("Failed to save the uploaded file.");
+        }
+        }
 }

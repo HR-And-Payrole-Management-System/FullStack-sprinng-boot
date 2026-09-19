@@ -17,6 +17,9 @@ public class HolidayMapper {
                 .holidayDate(
                         holiday.getHolidayDate()
                 )
+                .endDate(
+                        holiday.getEndDate()
+                )
                 .type(
                         holiday.getType().name()
                 )

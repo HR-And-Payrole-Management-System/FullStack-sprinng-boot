@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -121,4 +122,20 @@ public class CompanyController {
 
         return ResponseEntity.noContent().build();
     }
+    @PostMapping(value = "/{id}/logo", consumes = "multipart/form-data")
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('COMPANY_UPDATE')")
+        public ResponseEntity<ApiResponse<CompanyResponse>> uploadLogo(
+                @PathVariable Long id,
+                @RequestParam("file") MultipartFile file
+        ) {
+        CompanyResponse company = companyService.uploadLogo(id, file);
+
+        return ResponseEntity.ok(
+                ApiResponse.<CompanyResponse>builder()
+                        .success(true)
+                        .message("Company logo uploaded successfully.")
+                        .data(company)
+                        .build()
+        );
+        }
 }

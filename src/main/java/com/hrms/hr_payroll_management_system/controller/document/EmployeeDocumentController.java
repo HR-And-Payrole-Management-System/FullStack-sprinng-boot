@@ -5,6 +5,7 @@ import com.hrms.hr_payroll_management_system.dto.request.document.CreateEmployee
 import com.hrms.hr_payroll_management_system.dto.request.document.UpdateEmployeeDocumentRequest;
 import com.hrms.hr_payroll_management_system.dto.request.document.VerifyDocumentRequest;
 import com.hrms.hr_payroll_management_system.dto.response.document.EmployeeDocumentResponse;
+import com.hrms.hr_payroll_management_system.dto.response.document.UploadedFileResponse;
 import com.hrms.hr_payroll_management_system.service.document.EmployeeDocumentService;
 
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -208,6 +210,22 @@ public class EmployeeDocumentController {
                         .build()
         );
     }
+@PutMapping("/mark-expiring-soon")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('DOCUMENT_MANAGE')")
+    public ResponseEntity<ApiResponse<Integer>> markExpiringSoon(
+            @RequestParam(defaultValue = "7") int days
+    ) {
+
+        int count = service.markExpiringSoon(days);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Integer>builder()
+                        .success(true)
+                        .message("Expiring-soon documents processed successfully.")
+                        .data(count)
+                        .build()
+        );
+    }
 
     @DeleteMapping("/{id}")
     @PreAuthorize(
@@ -223,4 +241,17 @@ public class EmployeeDocumentController {
                 .noContent()
                 .build();
     }
+    @PostMapping("/upload")
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('DOCUMENT_CREATE')")
+        public ResponseEntity<ApiResponse<UploadedFileResponse>> uploadFile(
+                @RequestParam("file") MultipartFile file
+        ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<UploadedFileResponse>builder()
+                        .success(true)
+                        .message("File uploaded successfully.")
+                        .data(service.uploadFile(file))
+                        .build()
+        );
+        }
 }

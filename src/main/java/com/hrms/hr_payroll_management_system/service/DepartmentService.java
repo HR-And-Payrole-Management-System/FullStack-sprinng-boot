@@ -7,6 +7,8 @@ import com.hrms.hr_payroll_management_system.dto.response.department.DepartmentR
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public interface DepartmentService {
 
     DepartmentResponse create(
@@ -38,4 +40,6 @@ public interface DepartmentService {
     );
 
     void delete(Long id);
+
+    DepartmentResponse uploadLogo(Long id, MultipartFile file);
 }

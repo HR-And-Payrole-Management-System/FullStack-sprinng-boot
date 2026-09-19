@@ -17,31 +17,53 @@ public interface HolidayRepository
             LocalDate holidayDate
     );
 
-    List<Holiday> findByHolidayDateBetweenAndActiveTrueOrderByHolidayDateAsc(
-            LocalDate startDate,
-            LocalDate endDate
-    );
+        @Query("""
+                select case when count(h) > 0 then true else false end
+                from Holiday h
+                where h.active = true
+                and :date between h.holidayDate and h.endDate
+        """)
+        boolean existsByDateInRangeAndActiveTrue(
+                @Param("date") LocalDate date
+        );
 
-    boolean existsByHolidayDateAndActiveTrue(
-            LocalDate holidayDate
-    );
+        // ⚠️ កែ — ប្តូរពី exact holidayDate match ទៅ true overlap check
+        @Query("""
+                select h
+                from Holiday h
+                where h.active = true
+                and h.holidayDate <= :endDate
+                and h.endDate >= :startDate
+                order by h.holidayDate asc
+        """)
+        List<Holiday> findByHolidayDateBetweenAndActiveTrueOrderByHolidayDateAsc(
+                @Param("startDate") LocalDate startDate,
+                @Param("endDate") LocalDate endDate
+        );
 
-    @Query("""
-        select h
-        from Holiday h
-        where h.active = true
-          and h.holidayDate between :startDate and :endDate
-          and (
-                (h.company is null and h.branch is null)
-                or h.company.id = :companyId
-                or h.branch.id = :branchId
-          )
-        order by h.holidayDate asc
-    """)
-    List<Holiday> findApplicableHolidays(
-            @Param("companyId") Long companyId,
-            @Param("branchId") Long branchId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
+        boolean existsByHolidayDateAndActiveTrue(
+                LocalDate holidayDate
+        );
+
+        // ⚠️ កែ — overlap check ជំនួស exact holidayDate match
+        @Query("""
+                select h
+                from Holiday h
+                where h.active = true
+                and h.holidayDate <= :endDate
+                and h.endDate >= :startDate
+                and (
+                        (h.company is null and h.branch is null)
+                        or h.company.id = :companyId
+                        or h.branch.id = :branchId
+                )
+                order by h.holidayDate asc
+        """)
+        List<Holiday> findApplicableHolidays(
+                @Param("companyId") Long companyId,
+                @Param("branchId") Long branchId,
+                @Param("startDate") LocalDate startDate,
+                @Param("endDate") LocalDate endDate
+        );
+
 }

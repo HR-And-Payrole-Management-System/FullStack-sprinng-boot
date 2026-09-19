@@ -18,6 +18,8 @@ public class CreateHolidayRequest {
     @NotNull(message = "Holiday date is required")
     private LocalDate holidayDate;
 
+    private LocalDate endDate;
+
     @NotNull(message = "Holiday type is required")
     private HolidayType type;
 

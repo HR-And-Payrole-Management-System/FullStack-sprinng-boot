@@ -10,7 +10,7 @@ import com.hrms.hr_payroll_management_system.mapper.UserMapper;
 import com.hrms.hr_payroll_management_system.repository.RoleRepository;
 import com.hrms.hr_payroll_management_system.repository.UserRepository;
 import com.hrms.hr_payroll_management_system.service.UserService;
-
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -96,4 +96,17 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.toResponse(savedUser);
     }
+    @Override
+        @Transactional(readOnly = true)
+        public List<UserResponse> search(String keyword) {
+
+        String q = keyword == null ? "" : keyword;
+
+        return userRepository
+                .findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCase(q, q, q)
+                .stream()
+                .map(userMapper::toResponse)
+                .limit(20)
+                .toList();
+        }
 }

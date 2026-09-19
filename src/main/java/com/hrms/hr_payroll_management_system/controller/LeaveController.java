@@ -1,5 +1,6 @@
 package com.hrms.hr_payroll_management_system.controller;
 
+import com.hrms.hr_payroll_management_system.common.pagination.PageResponse;
 import com.hrms.hr_payroll_management_system.common.response.ApiResponse;
 import com.hrms.hr_payroll_management_system.dto.request.leave.CreateLeaveRequest;
 import com.hrms.hr_payroll_management_system.dto.request.leave.ReviewLeaveRequest;
@@ -20,6 +21,55 @@ import org.springframework.web.bind.annotation.*;
 public class LeaveController {
 
     private final LeaveService leaveService;
+
+    @PostMapping("/accrue")
+    @PreAuthorize(
+            "hasRole('ADMIN') or hasAuthority('LEAVE_TYPE_UPDATE')"
+    )
+    public ResponseEntity<ApiResponse<Integer>> accrue(
+            @RequestParam Integer year
+    ) {
+
+        int created = leaveService.accrueYearlyBalances(year);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Integer>builder()
+                        .success(true)
+                        .message(
+                                created
+                                        + " leave balance row(s) created."
+                        )
+                        .data(created)
+                        .build()
+        );
+    }
+
+    @GetMapping("/employees/{employeeId}")
+    @PreAuthorize(
+            "hasRole('ADMIN') or hasAuthority('LEAVE_VIEW')"
+    )
+    public ResponseEntity<ApiResponse<PageResponse<LeaveRequestResponse>>> getByEmployeeId(
+            @PathVariable Long employeeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<PageResponse<LeaveRequestResponse>>builder()
+                        .success(true)
+                        .message(
+                                "Employee leave requests retrieved successfully."
+                        )
+                        .data(
+                                leaveService.getByEmployeeId(
+                                        employeeId,
+                                        page,
+                                        size
+                                )
+                        )
+                        .build()
+        );
+    }
 
     @PostMapping("/employees/{employeeId}")
     @PreAuthorize(

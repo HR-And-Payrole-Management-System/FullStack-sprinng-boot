@@ -34,6 +34,10 @@ public class Role extends BaseEntity{
     @Builder.Default
     private Status status = Status.ACTIVE;
 
+    @Column(name = "badge_color", length = 7)
+    @Builder.Default
+    private String badgeColor = "#64748B";
+
     
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
@@ -47,4 +51,6 @@ public class Role extends BaseEntity{
     @ManyToMany(mappedBy = "roles")
     @Builder.Default
     private Set<User> users = new HashSet<>();
+
+    
 }

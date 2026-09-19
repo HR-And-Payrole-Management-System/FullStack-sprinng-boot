@@ -11,7 +11,7 @@ import com.hrms.hr_payroll_management_system.enums.EmploymentType;
 import com.hrms.hr_payroll_management_system.service.EmployeeService;
 import com.hrms.hr_payroll_management_system.dto.request.employee.ChangeEmployeeStatusRequest;
 import jakarta.validation.Valid;
-
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import com.hrms.hr_payroll_management_system.dto.request.employee.UpsertEmergencyContactRequest;
 import com.hrms.hr_payroll_management_system.dto.response.employee.EmergencyContactResponse;
@@ -19,7 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import com.hrms.hr_payroll_management_system.dto.response.employee.TeamMemberResponse;
+import org.springframework.security.core.Authentication;
+import java.util.List;
 @RestController
 @RequestMapping("/api/v1/employees")
 @RequiredArgsConstructor
@@ -278,6 +280,61 @@ public class EmployeeController {
                                 "Employee status changed successfully."
                         )
                         .data(employee)
+                        .build()
+        );
+        }
+        @DeleteMapping("/{employeeId}/user-link")
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('EMPLOYEE_UPDATE')")
+        public ResponseEntity<ApiResponse<Void>> unlinkUser(
+                @PathVariable Long employeeId
+        ) {
+        employeeService.unlinkUser(employeeId);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("User account unlinked successfully.")
+                        .build()
+        );
+        
+        }
+        
+
+        @PostMapping(
+        value = "/{employeeId}/photo",
+        consumes = "multipart/form-data"
+        )
+        @PreAuthorize(
+                "hasRole('ADMIN') or hasAuthority('EMPLOYEE_UPDATE')"
+        )
+        public ResponseEntity<ApiResponse<EmployeeResponse>> uploadPhoto(
+                @PathVariable Long employeeId,
+                @RequestParam("file") MultipartFile file
+        ) {
+        EmployeeResponse response =
+                employeeService.uploadPhoto(employeeId, file);
+
+        return ResponseEntity.ok(
+                ApiResponse.<EmployeeResponse>builder()
+                        .success(true)
+                        .message("Photo uploaded successfully.")
+                        .data(response)
+                        .build()
+        );
+        }
+        @GetMapping("/me/team")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<ApiResponse<List<TeamMemberResponse>>> getMyTeam(
+                Authentication authentication
+        ) {
+        List<TeamMemberResponse> team =
+                employeeService.getMyTeam(authentication.getName());
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<TeamMemberResponse>>builder()
+                        .success(true)
+                        .message("Team members retrieved successfully.")
+                        .data(team)
                         .build()
         );
         }

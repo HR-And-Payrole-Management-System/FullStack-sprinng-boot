@@ -20,4 +20,8 @@ public class DepartmentResponse {
     private Long branchId;
 
     private String branchName;
+
+    private String logoUrl;
+
+    private Long employeeCount;
 }

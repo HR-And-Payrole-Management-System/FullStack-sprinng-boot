@@ -11,4 +11,7 @@ public interface AccountSecurityService {
     void resetFailedLoginAttempts(User user);
 
     void unlockAccount(User user);
+
+    // ថ្មី៖ ឆែក auto-unlock ដោយស្ងាត់ៗ (មិន throw) — ត្រូវហៅមុន authenticate()
+    void tryAutoUnlock(User user);
 }

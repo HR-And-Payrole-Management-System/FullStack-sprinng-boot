@@ -15,6 +15,7 @@ import com.hrms.hr_payroll_management_system.exception.BadRequestException;
 import com.hrms.hr_payroll_management_system.exception.DuplicateResourceException;
 import com.hrms.hr_payroll_management_system.exception.ResourceNotFoundException;
 import com.hrms.hr_payroll_management_system.repository.EmployeeRepository;
+import com.hrms.hr_payroll_management_system.repository.payroll.BenefitEnrollmentRepository;
 import com.hrms.hr_payroll_management_system.repository.payroll.BenefitRuleRepository;
 import com.hrms.hr_payroll_management_system.repository.payroll.EmployeeSalaryRepository;
 import com.hrms.hr_payroll_management_system.repository.payroll.PayrollAdjustmentRepository;
@@ -22,7 +23,11 @@ import com.hrms.hr_payroll_management_system.repository.payroll.PayrollRepositor
 import com.hrms.hr_payroll_management_system.service.audit.AuditLogService;
 import com.hrms.hr_payroll_management_system.service.payroll.PayrollCalculationService;
 import com.hrms.hr_payroll_management_system.service.payroll.PayrollService;
-
+import com.hrms.hr_payroll_management_system.dto.request.notification.CreateNotificationRequest;
+import com.hrms.hr_payroll_management_system.enums.NotificationType;
+import com.hrms.hr_payroll_management_system.service.notification.NotificationService;
+import com.hrms.hr_payroll_management_system.enums.EmployeeStatus;
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -34,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -47,6 +53,8 @@ public class PayrollServiceImpl implements PayrollService {
     // Phase 10
     private final PayrollCalculationService payrollCalculationService;
     private final BenefitRuleRepository benefitRuleRepository;
+    private final NotificationService notificationService;
+    private final BenefitEnrollmentRepository benefitEnrollmentRepository;
     
 
 
@@ -213,8 +221,14 @@ public class PayrollServiceImpl implements PayrollService {
         // 12. Benefit rules
         // =========================================================
 
-        List<BenefitRule> benefitRules =
-                benefitRuleRepository.findByActiveTrue();
+        List<Long> enrolledRuleIds = benefitEnrollmentRepository.findActiveRuleIdsForEmployee(
+        employee.getId(),
+        java.time.LocalDate.of(request.getYear(), request.getMonth(), 1)
+                        );
+
+        List<BenefitRule> benefitRules = benefitRuleRepository.findByActiveTrue().stream()
+                .filter(rule -> enrolledRuleIds.contains(rule.getId()))
+                .collect(java.util.stream.Collectors.toList());
 
         // =========================================================
         // 13. Employee contribution
@@ -466,8 +480,7 @@ public class PayrollServiceImpl implements PayrollService {
     // MARK PAID
     // =============================================================
 
-    @Override
-    public PayrollResponse markPaid(Long id) {
+        public PayrollResponse markPaid(Long id) {
 
         Payroll payroll =
                 getPayroll(id);
@@ -495,6 +508,18 @@ public class PayrollServiceImpl implements PayrollService {
                 saved.getId(),
                 "Payroll marked as paid."
         );
+
+        CreateNotificationRequest notifRequest = new CreateNotificationRequest();
+        notifRequest.setEmployeeId(saved.getEmployee().getId());
+        notifRequest.setType(NotificationType.PAYROLL_PROCESSED);
+        notifRequest.setTitle("Payroll paid");
+        notifRequest.setMessage(
+                "Your payroll for " + saved.getMonth() + "/" + saved.getYear()
+                        + " has been paid."
+        );
+        notifRequest.setReferenceType("PAYROLL");
+        notifRequest.setReferenceId(saved.getId());
+        notificationService.create(notifRequest);
 
         return mapResponse(saved);
     }
@@ -670,5 +695,44 @@ public class PayrollServiceImpl implements PayrollService {
                 )
 
                 .build();
+    }
+        @Override
+    public int generateForAllActiveEmployees(int year, int month) {
+
+        List<Employee> activeEmployees =
+                employeeRepository.findByStatus(EmployeeStatus.ACTIVE);
+
+        int created = 0;
+
+        for (Employee employee : activeEmployees) {
+
+            if (payrollRepository.existsByEmployeeIdAndYearAndMonth(
+                    employee.getId(),
+                    year,
+                    month
+            )) {
+                continue;
+            }
+
+            GeneratePayrollRequest request = new GeneratePayrollRequest();
+            request.setEmployeeId(employee.getId());
+            request.setYear(year);
+            request.setMonth(month);
+
+            try {
+                generate(request);
+                created++;
+            } catch (Exception e) {
+                log.warn(
+                        "Skipped payroll generation for employee {} ({}/{}): {}",
+                        employee.getId(),
+                        year,
+                        month,
+                        e.getMessage()
+                );
+            }
+        }
+
+        return created;
     }
 }

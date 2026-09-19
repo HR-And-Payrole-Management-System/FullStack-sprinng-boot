@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    hibernate:
+      # validate only — never let Hibernate alter the production schema.
+      # Use a migration tool (Flyway/Liquibase) for real schema changes.
+      ddl-auto: validate
+    show-sql: false
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+logging:
+  level:
+    root: WARN

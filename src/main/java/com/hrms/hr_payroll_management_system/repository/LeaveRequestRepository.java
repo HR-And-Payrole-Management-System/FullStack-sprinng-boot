@@ -32,4 +32,6 @@ public interface LeaveRequestRepository
             LocalDate startDate,
             LocalDate endDate
     );
+    long countByStatus(LeaveRequestStatus status);
+
 }

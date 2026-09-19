@@ -74,4 +74,10 @@ public class Holiday extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(
+        name = "end_date",
+        nullable = false
+        )
+        private LocalDate endDate;
 }

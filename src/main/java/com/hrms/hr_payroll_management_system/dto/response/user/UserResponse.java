@@ -31,4 +31,6 @@ public class UserResponse {
     private Integer failedLoginAttempts;
 
     private LocalDateTime lockedAt;
+
+    private Boolean emailSent;
 }

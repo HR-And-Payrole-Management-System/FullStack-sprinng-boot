@@ -16,4 +16,6 @@ public interface PayrollService {
     PayrollResponse approve(Long id);
 
     PayrollResponse markPaid(Long id);
+
+    int generateForAllActiveEmployees(int year, int month);
 }

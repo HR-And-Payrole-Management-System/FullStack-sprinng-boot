@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import com.hrms.hr_payroll_management_system.dto.request.auth.VerifyEmailRequest;
 import com.hrms.hr_payroll_management_system.dto.request.auth.ResendVerificationRequest;
 import com.hrms.hr_payroll_management_system.dto.response.auth.CurrentUserResponse;
+import com.hrms.hr_payroll_management_system.dto.request.auth.VerifyOtpRequest;
+import com.hrms.hr_payroll_management_system.dto.request.auth.ResendOtpRequest;
+import com.hrms.hr_payroll_management_system.dto.response.auth.LoginChallengeResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @RestController
@@ -45,15 +49,34 @@ public class AuthController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-         
                 .body(response);
     }
+
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(
+    public ResponseEntity<ApiResponse<LoginChallengeResponse>> login(
             @Valid @RequestBody LoginRequest request
     ) {
 
-        LoginResponse loginResponse = authService.login(request);
+        LoginChallengeResponse challenge = authService.login(request);
+
+        ApiResponse<LoginChallengeResponse> response =
+                ApiResponse.<LoginChallengeResponse>builder()
+                        .success(true)
+                        .message("Verification code sent to your email.")
+                        .data(challenge)
+                        .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
+            @Valid @RequestBody VerifyOtpRequest request,
+            HttpServletRequest httpRequest
+    ) {
+
+        LoginResponse loginResponse =
+                authService.verifyOtp(request, httpRequest);
 
         ApiResponse<LoginResponse> response =
                 ApiResponse.<LoginResponse>builder()
@@ -64,10 +87,28 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<Void>> resendOtp(
+            @Valid @RequestBody ResendOtpRequest request
+    ) {
+
+        authService.resendOtp(request);
+
+        ApiResponse<Void> response =
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Verification code resent.")
+                        .data(null)
+                        .build();
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/refresh-token")
-        public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
-                @Valid @RequestBody RefreshTokenRequest request
-        ) {
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
 
         LoginResponse loginResponse =
                 authService.refreshToken(request);
@@ -80,11 +121,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PostMapping("/logout")
-        public ResponseEntity<ApiResponse<Void>> logout(
-                @Valid @RequestBody LogoutRequest request
-        ) {
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Valid @RequestBody LogoutRequest request
+    ) {
 
         authService.logout(request);
 
@@ -96,11 +138,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PostMapping("/forgot-password")
-        public ResponseEntity<ApiResponse<Void>> forgotPassword(
-                @Valid @RequestBody ForgotPasswordRequest request
-        ) {
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
 
         authService.forgotPassword(request);
 
@@ -114,11 +157,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PostMapping("/reset-password")
-        public ResponseEntity<ApiResponse<Void>> resetPassword(
-                @Valid @RequestBody ResetPasswordRequest request
-        ) {
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
 
         authService.resetPassword(request);
 
@@ -132,12 +176,13 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PutMapping("/change-password")
-        public ResponseEntity<ApiResponse<Void>> changePassword(
-                Authentication authentication,
-                @Valid @RequestBody ChangePasswordRequest request
-        ) {
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
 
         authService.changePassword(
                 authentication.getName(),
@@ -152,11 +197,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PostMapping("/verify-email")
-        public ResponseEntity<ApiResponse<Void>> verifyEmail(
-                @Valid @RequestBody VerifyEmailRequest request
-        ) {
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request
+    ) {
 
         authService.verifyEmail(request);
 
@@ -168,11 +214,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @PostMapping("/resend-verification")
-        public ResponseEntity<ApiResponse<Void>> resendVerification(
-                @Valid @RequestBody ResendVerificationRequest request
-        ) {
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
 
         authService.resendVerification(request);
 
@@ -184,11 +231,12 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        @GetMapping("/me")
-        public ResponseEntity<ApiResponse<CurrentUserResponse>> me(
-                Authentication authentication
-        ) {
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<CurrentUserResponse>> me(
+            Authentication authentication
+    ) {
 
         CurrentUserResponse currentUser =
                 authService.getCurrentUser(
@@ -203,6 +251,5 @@ public class AuthController {
                         .build();
 
         return ResponseEntity.ok(response);
-        }
-        
+    }
 }

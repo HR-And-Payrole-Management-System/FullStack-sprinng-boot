@@ -6,9 +6,9 @@ import com.hrms.hr_payroll_management_system.dto.response.user.UserResponse;
 import com.hrms.hr_payroll_management_system.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
-
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,4 +76,17 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+    @GetMapping
+        @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_VIEW')")
+        public ResponseEntity<ApiResponse<List<UserResponse>>> search(
+                @RequestParam(required = false) String keyword
+        ) {
+        return ResponseEntity.ok(
+                ApiResponse.<List<UserResponse>>builder()
+                        .success(true)
+                        .message("Users retrieved successfully.")
+                        .data(userService.search(keyword))
+                        .build()
+        );
+        }
 }
